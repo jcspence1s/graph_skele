@@ -21,6 +21,9 @@ main(void)
 	graph_add_node(&myGraph, c);
 	graph_add_node(&myGraph, d);
 
+	graph_add_edge(&myGraph, a, b, 1);
+	graph_add_edge(&myGraph, a, c, 3);
+
 	graph_print(&myGraph);
 
 	return 0;

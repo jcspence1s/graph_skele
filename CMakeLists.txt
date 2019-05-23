@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 project(JQR)
+add_definitions("-g")
 add_library(graph_lib src/graph.c)
 add_executable(graph_driver src/driver.c)
 target_link_libraries(graph_driver graph_lib)

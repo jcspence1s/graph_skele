@@ -39,6 +39,9 @@ graph_init(graph_t *graph, print_f print, compare_f compare);
 bool
 graph_add_node(graph_t *graph, void *data);
 
+bool
+graph_add_edge(graph_t *graph, void *source, void *dest, uint64_t weight);
+
 void
 graph_print(graph_t *graph);
 
