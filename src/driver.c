@@ -26,6 +26,12 @@ main(void)
 
 	graph_print(&myGraph);
 
+	printf("A -> B is %s found.\n", graph_find_edge(&myGraph, a, b) ? "\b" : "not");
+	printf("B -> D is %s found.\n", graph_find_edge(&myGraph, b, d) ? "\b" : "not");
+	
+	graph_remove_edge(&myGraph, a, d);
+	graph_print(&myGraph);
+
 	return 0;
 }
 

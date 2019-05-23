@@ -6,7 +6,7 @@ new_graph_node(void *data);
 static graph_edge_t *
 new_node_edge(graph_node_t *node, uint64_t weight);
 
-static graph_node_t *
+graph_node_t *
 graph_find_node(graph_t *graph, void *data);
 
 static bool
@@ -119,6 +119,127 @@ graph_print(graph_t *graph)
 	}
 }
 
+graph_node_t *
+graph_find_node(graph_t *graph, void *data)
+{
+	if((NULL == graph) || (NULL == data))
+	{
+		errno = EINVAL;
+		return NULL;
+	}
+	graph_node_t *index = graph->head;
+	while(NULL != index)
+	{
+		if(0 == graph->compare(index->data, data))
+		{
+			return index;
+		}
+		index = index->next_node;
+	}
+	return NULL;
+}
+
+graph_edge_t *
+graph_find_edge(graph_t *graph, void *from, void *to)
+{
+	if((NULL == graph) || (NULL == graph->head) || (NULL == from) || (NULL == to))
+	{
+		errno = EINVAL;
+		return NULL;
+	}
+	graph_node_t *cur_node = graph->head;
+	{
+		if(0 == graph->compare(cur_node->data, from))
+		{
+			graph_edge_t *cur_edge = cur_node->edges;
+			while(NULL != cur_edge)
+			{
+				if(0 == graph->compare(cur_edge->edge->data, to))
+				{
+					return cur_edge;
+				}
+				cur_edge = cur_edge->next_edge;
+			}
+		}
+		cur_node = cur_node->next_node;
+	}
+	return NULL;
+}
+
+
+bool
+graph_remove_edge(graph_t *graph, void *from, void *to)
+{
+	if((NULL == graph) || (NULL == graph->head) || (NULL == from) || (NULL == to))
+	{
+		errno = EINVAL;
+		return false;
+	}
+	bool removed = false;
+	graph_node_t *from_node = graph_find_node(graph, from);	
+	graph_node_t *to_node = graph_find_node(graph, to);	
+	graph_edge_t *from_edge = from_node->edges;
+	graph_edge_t *to_edge = to_node->edges;
+	while(NULL != from_edge)
+	{
+		if(from_edge->edge == to_node)
+		{
+			if(NULL != from_edge->prev_edge)
+			{
+				from_edge->prev_edge->next_edge = from_edge->next_edge;
+			}
+			if(NULL == from_edge->prev_edge)
+			{
+				from_node->edges = from_edge->next_edge;
+			}
+			if(NULL != from_edge->next_edge)
+			{
+				from_edge->next_edge->prev_edge = from_edge->prev_edge;
+			}
+			free(from_edge);
+			from_edge = NULL;
+			removed = true;
+			break;
+		}
+		from_edge = from_edge->next_edge;
+	}
+	if(false == removed)
+	{
+		/* No edge found */
+		return false;
+	}
+	removed = false;
+	while(NULL != to_edge)
+	{
+		if(to_edge->edge == from_node)
+		{
+			if(NULL != to_edge->prev_edge)
+			{
+				to_edge->prev_edge->next_edge = to_edge->next_edge;
+			}
+			if(NULL == to_edge->prev_edge)
+			{
+				to_node->edges = to_edge->next_edge;
+			}
+			if(NULL != to_edge->next_edge)
+			{
+				to_edge->next_edge->prev_edge = to_edge->prev_edge;
+			}
+			free(to_edge);
+			to_edge = NULL;
+			removed = true;
+			break;
+		}
+		to_edge = to_edge->next_edge;
+	}
+	if(false == removed)
+	{
+		/* No Edge found */
+		return false;
+	}
+	return true;
+}
+
 static graph_node_t *
 new_graph_node(void *data)
 {
@@ -176,17 +297,3 @@ add_edge_to_node(graph_node_t *from_node, graph_node_t *to_node, uint64_t weight
 	return true;
 }
 
-static graph_node_t *
-graph_find_node(graph_t *graph, void *data)
-{
-	graph_node_t *index = graph->head;
-	while(NULL != index)
-	{
-		if(0 == graph->compare(index->data, data))
-		{
-			return index;
-		}
-		index = index->next_node;
-	}
-	return NULL;
-}
