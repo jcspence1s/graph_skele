@@ -57,4 +57,7 @@ graph_remove_node(graph_t *graph, void *data);
 bool
 graph_remove_edge(graph_t *graph, void *from, void *to);
 
+void
+graph_destroy(graph_t *graph);
+
 #endif

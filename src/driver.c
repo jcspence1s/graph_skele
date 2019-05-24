@@ -22,14 +22,17 @@ main(void)
 	graph_add_node(&myGraph, d);
 
 	graph_add_edge(&myGraph, a, b, 1);
-	graph_add_edge(&myGraph, a, c, 3);
+	//graph_add_edge(&myGraph, a, c, 3);
 
 	graph_print(&myGraph);
 
 	printf("A -> B is %s found.\n", graph_find_edge(&myGraph, a, b) ? "\b" : "not");
+	printf("B -> A is %s found.\n", graph_find_edge(&myGraph, b, a) ? "\b" : "not");
 	printf("B -> D is %s found.\n", graph_find_edge(&myGraph, b, d) ? "\b" : "not");
 	
-	graph_remove_edge(&myGraph, a, d);
+	printf("%s is removed.\n", (char *)graph_remove_node(&myGraph, a));
+	graph_print(&myGraph);
+	graph_destroy(&myGraph);
 	graph_print(&myGraph);
 
 	return 0;
