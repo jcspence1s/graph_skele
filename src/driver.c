@@ -67,13 +67,19 @@ main(void)
 
 	pqueue_t path;
 	queue_init(&path, myPrint, myGraph.compare);
-	find_path(&myGraph, f, e, &path);
-	graph_node_t *popped = queue_dequeue(&path);
-	while(NULL != popped)
+	if(find_path(&myGraph, f, e, &path))
 	{
-		myPrint(popped->data);
-		printf("->");
-		popped = (graph_node_t *)queue_dequeue(&path);
+		graph_node_t *popped = queue_dequeue(&path);
+		while(NULL != popped)
+		{
+			myPrint(popped->data);
+			printf("->");
+			popped = (graph_node_t *)queue_dequeue(&path);
+		}
+	}
+	else
+	{
+		printf("No path\n");
 	}
 
 	return 0;

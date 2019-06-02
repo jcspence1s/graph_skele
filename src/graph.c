@@ -423,6 +423,10 @@ find_path(graph_t *graph, void *start, void *end, pqueue_t *path)
 	{
 		uint64_t cur_node_id = current_node->node_id;
 		distance_to_node[cur_node_id][0] = INT_MAX;
+		for(uint64_t j = 0; j < 2; j++)
+		{
+			distance_to_node[cur_node_id][1] = cur_node_id;
+		}
 		path_node_t *tmp = new_path_node(cur_node_id, distance_to_node[cur_node_id][0], current_node);
 		if(NULL == tmp)
 		{
@@ -468,6 +472,10 @@ find_path(graph_t *graph, void *start, void *end, pqueue_t *path)
 		if(cur_node_id == start_node->node_id)
 		{
 			return true;
+		}
+		if(cur_node_id == distance_to_node[cur_node_id][1])
+		{
+			return false;
 		}
 		cur_node_id = distance_to_node[cur_node_id][1];
 	}
