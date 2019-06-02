@@ -65,8 +65,16 @@ main(void)
 	printf("Dequeued %s \n", (char *)queue_dequeue(&myPqueue));
 	*/
 
-	find_path(&myGraph, a, c);
-
+	pqueue_t path;
+	queue_init(&path, myPrint, myGraph.compare);
+	find_path(&myGraph, f, e, &path);
+	graph_node_t *popped = queue_dequeue(&path);
+	while(NULL != popped)
+	{
+		myPrint(popped->data);
+		printf("->");
+		popped = (graph_node_t *)queue_dequeue(&path);
+	}
 
 	return 0;
 }

@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <stdio.h>
+#include "pqueue.h"
 
 typedef int(*compare_f)(const char *, const char *);
 typedef void(*print_f)(void *);
@@ -70,8 +71,7 @@ graph_remove_edge(graph_t *graph, void *from, void *to);
 void
 graph_destroy(graph_t *graph);
 
-
 bool
-find_path(graph_t *graph, void *start, void *end);
+find_path(graph_t *graph, void *start, void *end, pqueue_t *path);
 
 #endif

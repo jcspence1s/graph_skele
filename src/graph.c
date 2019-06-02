@@ -400,7 +400,7 @@ new_path_node(uint64_t node_id, uint64_t distance, graph_node_t *node)
 }
 
 bool
-find_path(graph_t *graph, void *start, void *end)
+find_path(graph_t *graph, void *start, void *end, pqueue_t *path)
 {
 	if((NULL == graph) || (NULL == start) || (NULL == end))
 	{
@@ -417,55 +417,59 @@ find_path(graph_t *graph, void *start, void *end)
 	pqueue_t nodes;
 	queue_init(&nodes, print_wrapper, graph->compare);
 
-	uint64_t distance_to_node[CURRENT_ID];
+	uint64_t distance_to_node[CURRENT_ID][2];
 	graph_node_t *current_node = graph->head;
 	for(uint64_t i = 0; i < CURRENT_ID; i++)
 	{
 		uint64_t cur_node_id = current_node->node_id;
-		distance_to_node[cur_node_id] = INT_MAX;
-		path_node_t *tmp = new_path_node(cur_node_id, distance_to_node[cur_node_id], current_node);
+		distance_to_node[cur_node_id][0] = INT_MAX;
+		path_node_t *tmp = new_path_node(cur_node_id, distance_to_node[cur_node_id][0], current_node);
 		if(NULL == tmp)
 		{
 			printf("Fail\n");
 			return NULL;
 		}
-		queue_enqueue(&nodes, tmp, distance_to_node[i]);
+		queue_enqueue(&nodes, tmp, distance_to_node[i][0]);
 		current_node = current_node->next_node;
 	}
 	queue_update(&nodes, start_node->node_id, 0);
-	distance_to_node[start_node->node_id] = 0;
-	queue_print(&nodes);
+	distance_to_node[start_node->node_id][0] = 0;
+	distance_to_node[start_node->node_id][1] = 0;
 	path_node_t *tmp = NULL;
 	while(tmp = (path_node_t *)queue_dequeue(&nodes))
 	{
-		printf("Current: %s\n", (char *)tmp->node->data);
-		printf("Current ID: %ld\n", tmp->node_id);
-		for(uint64_t i = 0; i < CURRENT_ID; i++)
-		{
-			printf("%ld: Weight:%ld\n", i, distance_to_node[i]);
-		}
 		graph_edge_t *edges = tmp->node->edges;
 		while(NULL != edges)
 		{
-			printf("\nLooking at %s\n", (char *)edges->edge->data);
-			if(distance_to_node[tmp->node_id] != INT_MAX && distance_to_node[edges->edge->node_id] > distance_to_node[tmp->node_id] + edges->weight)
+			if(distance_to_node[tmp->node_id][0] != INT_MAX && distance_to_node[edges->edge->node_id][0] > distance_to_node[tmp->node_id][0] + edges->weight)
 			{
-				printf("Testing\n");
 				bool update = queue_update(&nodes, edges->edge->node_id, 
-						distance_to_node[tmp->node_id] + edges->weight);
-				distance_to_node[edges->edge->node_id] = distance_to_node[tmp->node_id] + edges->weight;
-				if(update)
-				{
-				}
-			}
-			else
-			{
-				printf("STL\n");
+						distance_to_node[tmp->node_id][0] + edges->weight);
+				distance_to_node[edges->edge->node_id][0] = distance_to_node[tmp->node_id][0] + edges->weight;
+				distance_to_node[edges->edge->node_id][1] = tmp->node_id;
 			}
 			edges = edges->next_edge;
-			printf("\nRemaining\n");
-			queue_print(&nodes);
 		}
+	}
+	uint64_t cur_node_id = end_node->node_id;
+	uint64_t reverse_prio = CURRENT_ID;
+	for(;;)
+	{
+		graph_node_t *index = graph->head;
+		while(NULL != index)
+		{
+			if(index->node_id == cur_node_id)
+			{
+				queue_enqueue(path, index, reverse_prio--);
+				break;
+			}
+			index = index->next_node;
+		}
+		if(cur_node_id == start_node->node_id)
+		{
+			return true;
+		}
+		cur_node_id = distance_to_node[cur_node_id][1];
 	}
 }
 

@@ -107,7 +107,6 @@ queue_dequeue(pqueue_t *pqueue)
 bool
 queue_update(pqueue_t *pqueue, uint64_t data_id, uint64_t new_priority)
 {
-	printf("new: %ld\n", new_priority);
 	if((NULL == pqueue) || (NULL == pqueue->head))
 	{
 		return false;
