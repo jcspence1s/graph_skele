@@ -39,7 +39,7 @@ void
 queue_print(pqueue_t *pqueue);
 
 bool
-queue_update(pqueue_t *pqueue, void *data, uint64_t new_priority);
+queue_update(pqueue_t *pqueue, uint64_t data, uint64_t new_priority);
 
 bool
 queue_sort(pqueue_t *pqueue);
@@ -48,6 +48,6 @@ void *
 queue_peek(pqueue_t *pqueue, void *data);
 
 bool
-queue_is_present(pqueue_t *pqueue, void *data);
+queue_is_present(pqueue_t *pqueue, uint64_t data);
 
 #endif

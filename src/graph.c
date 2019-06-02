@@ -1,4 +1,5 @@
 #include "graph.h"
+#include "pqueue.h"
 
 static graph_node_t *
 new_graph_node(void *data);
@@ -6,11 +7,19 @@ new_graph_node(void *data);
 static graph_edge_t *
 new_node_edge(graph_node_t *node, uint64_t weight);
 
+static path_node_t *
+new_path_node(uint64_t node_id, uint64_t distance, graph_node_t *node);
+
 graph_node_t *
 graph_find_node(graph_t *graph, void *data);
 
 static bool
 add_edge_to_node(graph_node_t *from_node, graph_node_t *to_node, uint64_t weight);
+
+static void
+print_wrapper(void *node);
+
+uint64_t CURRENT_ID = 0;
 
 bool
 graph_init(graph_t *graph, print_f print, compare_f compare)
@@ -22,6 +31,7 @@ graph_init(graph_t *graph, print_f print, compare_f compare)
 	graph->head = NULL;
 	graph->print = print;
 	graph->compare = compare;
+	graph->size = 0;
 	return true;
 }
 
@@ -41,6 +51,7 @@ graph_add_node(graph_t *graph, void *data)
 			/* Malloc failed */
 			return false;
 		}
+		graph->size++;
 		return true;
 	}
 	graph_node_t *index = graph->head;
@@ -53,6 +64,7 @@ graph_add_node(graph_t *graph, void *data)
 	{
 		return false;
 	}
+	graph->size++;
 	index->next_node = new_node;
 	index->next_node->prev_node = index;
 	return true;
@@ -181,6 +193,7 @@ graph_remove_node(graph_t *graph, void *data)
 	if(NULL == cur_edge)
 	{
 		void *ret_data = remove_node->data;
+		graph->size--;
 		free(remove_node);
 		remove_node = NULL;
 		return ret_data;
@@ -209,6 +222,7 @@ graph_remove_node(graph_t *graph, void *data)
 		remove_node->prev_node->next_node = remove_node->next_node;
 	}
 	void *ret_data = remove_node->data;
+	graph->size--;
 	free(remove_node);
 	remove_node = NULL;
 	return ret_data;
@@ -330,6 +344,7 @@ new_graph_node(void *data)
 	new_node->edges = NULL;
 	new_node->next_node = NULL;
 	new_node->prev_node = NULL;
+	new_node->node_id = CURRENT_ID++;
 	return new_node;
 }
 
@@ -375,3 +390,88 @@ add_edge_to_node(graph_node_t *from_node, graph_node_t *to_node, uint64_t weight
 	return true;
 }
 
+static path_node_t *
+new_path_node(uint64_t node_id, uint64_t distance, graph_node_t *node)
+{
+	path_node_t *new_p_node = malloc(sizeof(*new_p_node));
+	new_p_node->node_id = node_id;
+	new_p_node->distance_from_start = distance;
+	new_p_node->node = node;
+}
+
+bool
+find_path(graph_t *graph, void *start, void *end)
+{
+	if((NULL == graph) || (NULL == start) || (NULL == end))
+	{
+		errno = EINVAL;
+		return false;
+	}
+	graph_node_t *start_node = graph_find_node(graph, start);
+	graph_node_t *end_node = graph_find_node(graph, end);
+	if((NULL == start_node) || (NULL == end_node))
+	{
+		return false;
+	}
+
+	pqueue_t nodes;
+	queue_init(&nodes, print_wrapper, graph->compare);
+
+	uint64_t distance_to_node[CURRENT_ID];
+	graph_node_t *current_node = graph->head;
+	for(uint64_t i = 0; i < CURRENT_ID; i++)
+	{
+		uint64_t cur_node_id = current_node->node_id;
+		distance_to_node[cur_node_id] = INT_MAX;
+		path_node_t *tmp = new_path_node(cur_node_id, distance_to_node[cur_node_id], current_node);
+		if(NULL == tmp)
+		{
+			printf("Fail\n");
+			return NULL;
+		}
+		queue_enqueue(&nodes, tmp, distance_to_node[i]);
+		current_node = current_node->next_node;
+	}
+	queue_update(&nodes, start_node->node_id, 0);
+	distance_to_node[start_node->node_id] = 0;
+	queue_print(&nodes);
+	path_node_t *tmp = NULL;
+	while(tmp = (path_node_t *)queue_dequeue(&nodes))
+	{
+		printf("Current: %s\n", (char *)tmp->node->data);
+		printf("Current ID: %ld\n", tmp->node_id);
+		for(uint64_t i = 0; i < CURRENT_ID; i++)
+		{
+			printf("%ld: Weight:%ld\n", i, distance_to_node[i]);
+		}
+		graph_edge_t *edges = tmp->node->edges;
+		while(NULL != edges)
+		{
+			printf("\nLooking at %s\n", (char *)edges->edge->data);
+			if(distance_to_node[tmp->node_id] != INT_MAX && distance_to_node[edges->edge->node_id] > distance_to_node[tmp->node_id] + edges->weight)
+			{
+				printf("Testing\n");
+				bool update = queue_update(&nodes, edges->edge->node_id, 
+						distance_to_node[tmp->node_id] + edges->weight);
+				distance_to_node[edges->edge->node_id] = distance_to_node[tmp->node_id] + edges->weight;
+				if(update)
+				{
+				}
+			}
+			else
+			{
+				printf("STL\n");
+			}
+			edges = edges->next_edge;
+			printf("\nRemaining\n");
+			queue_print(&nodes);
+		}
+	}
+}
+
+static void
+print_wrapper(void *node)
+{
+	path_node_t *tmp = (path_node_t *)node;
+	printf("%ld", tmp->node_id);
+}

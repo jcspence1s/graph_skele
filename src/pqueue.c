@@ -105,16 +105,17 @@ queue_dequeue(pqueue_t *pqueue)
 }
 
 bool
-queue_update(pqueue_t *pqueue, void *data, uint64_t new_priority)
+queue_update(pqueue_t *pqueue, uint64_t data_id, uint64_t new_priority)
 {
-	if((NULL == pqueue) || (NULL == pqueue->head) || (NULL == data))
+	printf("new: %ld\n", new_priority);
+	if((NULL == pqueue) || (NULL == pqueue->head))
 	{
 		return false;
 	}
 	pqueue_node_t *cur = pqueue->head;
 	while(NULL != cur)
 	{
-		if(cur->data == data)
+		if(*(uint64_t *)cur->data == data_id)
 		{
 			if(cur->priority > new_priority)
 			{
@@ -201,9 +202,9 @@ queue_print(pqueue_t *pqueue)
 }
 
 bool
-queue_is_present(pqueue_t *pqueue, void *data)
+queue_is_present(pqueue_t *pqueue, uint64_t id)
 {
-	if((NULL == pqueue) || (NULL == pqueue->head) || (NULL == data))
+	if((NULL == pqueue) || (NULL == pqueue->head))
 	{
 		errno = EINVAL;
 		return false;
@@ -211,7 +212,7 @@ queue_is_present(pqueue_t *pqueue, void *data)
 	pqueue_node_t *cur = pqueue->head;
 	while(NULL != cur)
 	{
-		if(cur->data == data)
+		if(*(uint64_t *)cur->data == id)
 		{
 			return true;
 		}
